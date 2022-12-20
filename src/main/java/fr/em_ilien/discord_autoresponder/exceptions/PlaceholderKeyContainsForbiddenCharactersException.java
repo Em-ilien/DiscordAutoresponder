@@ -5,6 +5,6 @@ public class PlaceholderKeyContainsForbiddenCharactersException extends Exceptio
 	private static final long serialVersionUID = -9171234387918123349L;
 
 	public PlaceholderKeyContainsForbiddenCharactersException() {
-		super("Placeholder keys must contains only letters, '{', '}', '%' and '_' characters.");
+		super("Placeholder keys must contains only uppercase letters, '{', '}', '%' and '_' characters.");
 	}
 }

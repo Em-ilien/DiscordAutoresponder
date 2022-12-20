@@ -10,10 +10,11 @@ import java.util.concurrent.TimeUnit;
 import fr.em_ilien.discord_autoresponder.exceptions.AutoresponderMessageWasNotDefinedException;
 import fr.em_ilien.discord_autoresponder.exceptions.UserHasAlreadyBeenRepliedRecentlyException;
 import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.PrivateChannel;
 import net.dv8tion.jda.api.entities.User;
 
 /**
- * Represents the autorespondeur which send auto responses to users who send you
+ * Represents the autoresponder which send auto responses to users who send you
  * DM
  * 
  * To instanciate:
@@ -66,7 +67,7 @@ public class Autoresponder {
 	}
 
 	private Calendar getCalendar() {
-		if (timezone == null)
+		if (timezone == null || timezone == "")
 			return Calendar.getInstance();
 
 		return Calendar.getInstance(TimeZone.getTimeZone(timezone));
@@ -86,7 +87,7 @@ public class Autoresponder {
 	 * @see UserHasAlreadyBeenRepliedRecentlyException
 	 * @see {@link Autoresponder#delay}
 	 */
-	public boolean isUserHasAlreadyReceiveAResponseRecently(String userId) {
+	public boolean isUserHasAlreadyReceivedAResponseRecently(String userId) {
 		if (usersWhoReceivedAResponse.containsKey(userId))
 			if (getCalendar().getTime().before(usersWhoReceivedAResponse.get(userId)))
 				return true;
@@ -99,7 +100,7 @@ public class Autoresponder {
 	 * {@link Autoresponder#delay}.
 	 * 
 	 * Before using this method, please check that
-	 * {@link Autoresponder#isUserHasAlreadyReceiveAResponseRecently(String)} is
+	 * {@link Autoresponder#isUserHasAlreadyReceivedAResponseRecently(String)} is
 	 * false and that {@link Autoresponder#setMessage(String)} was used.
 	 * 
 	 * @param user    The user who send you a DM
@@ -111,8 +112,10 @@ public class Autoresponder {
 	 *                                                    received the message from
 	 *                                                    autoresponder recently
 	 * 
+	 * @see Autoresponder#replyIfUserHasntAlreadyReceivedAResponseRecently(User,
+	 *      PrivateChannel)
 	 * @see Autoresponder#setMessage(String)
-	 * @see Autoresponder#isUserHasAlreadyReceiveAResponseRecently(String)
+	 * @see Autoresponder#isUserHasAlreadyReceivedAResponseRecently(String)
 	 * @see Autoresponder#setMinimumDelayBetweenTwoAutoResponses(int)
 	 */
 	public void reply(User user, MessageChannel channel)
@@ -121,7 +124,7 @@ public class Autoresponder {
 		if (message == null)
 			throw new AutoresponderMessageWasNotDefinedException();
 
-		if (isUserHasAlreadyReceiveAResponseRecently(user.getId()))
+		if (isUserHasAlreadyReceivedAResponseRecently(user.getId()))
 			throw new UserHasAlreadyBeenRepliedRecentlyException();
 
 		final Calendar calendar = getCalendar();
@@ -134,6 +137,30 @@ public class Autoresponder {
 		usersWhoReceivedAResponse.put(user.getId(), calendar.getTime());
 
 		channel.sendMessage(message).queueAfter(delay, TimeUnit.SECONDS);
+	}
+
+	/**
+	 * Check if user has already received a response recently and, if not, let the
+	 * autoresponder reply.
+	 * 
+	 * @see Autoresponder#reply(User, MessageChannel)
+	 * 
+	 * @param user    The user who send you a DM
+	 * @param channel The TextChannel representing the DM channel between you and
+	 *                the user
+	 * @throws AutoresponderMessageWasNotDefinedException if message attribute
+	 *                                                    wasn't defined
+	 */
+	public void replyIfUserHasntAlreadyReceivedAResponseRecently(User author, PrivateChannel channel)
+			throws AutoresponderMessageWasNotDefinedException {
+		if (isUserHasAlreadyReceivedAResponseRecently(author.getId()))
+			return;
+
+		try {
+			reply(author, channel);
+		} catch (UserHasAlreadyBeenRepliedRecentlyException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**

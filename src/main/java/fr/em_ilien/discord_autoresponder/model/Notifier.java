@@ -26,12 +26,14 @@ import fr.em_ilien.discord_autoresponder.exceptions.NotifierParameterWasNotDefin
  *
  */
 public class Notifier {
+	private static final String DISCORD_DM_NOTIFICATIONS = "Discord DM notifications";
+
 	private static Notifier instance;
 
 	private Mailer mailer;
 
-	private String senderEmailAddress;
-	private String recipientEmailAddress;
+	private String notifierEmailAddress;
+	private String notifiedEmailAddress;
 
 	private String title;
 	private String body;
@@ -39,8 +41,8 @@ public class Notifier {
 	private Notifier() {
 		mailer = null;
 
-		senderEmailAddress = null;
-		recipientEmailAddress = null;
+		notifierEmailAddress = null;
+		notifiedEmailAddress = null;
 
 		title = null;
 		body = null;
@@ -71,46 +73,60 @@ public class Notifier {
 	 *                                                 was not used.
 	 */
 	public void sendWith(Placeholder... placeholders) throws NotifierParameterWasNotDefinedException {
-		if (title == null || body == null || mailer == null || senderEmailAddress == null
-				|| recipientEmailAddress == null)
+		if (oneOfTheseIsNull(title, body, notifierEmailAddress, notifiedEmailAddress, mailer))
 			throw new NotifierParameterWasNotDefinedException();
 
-		String localTitle = this.title;
-		String localBody = this.body;
+		String customTitle = this.title;
+		String customBody = this.body;
 
 		for (int i = 0; i < placeholders.length; i++) {
 			Placeholder placeholder = placeholders[i];
 
-			localTitle = localTitle.replace(placeholder.getKey(), placeholder.getValue());
-			localBody = localBody.replace(placeholder.getKey(), placeholder.getValue());
+			customTitle = customTitle.replace(placeholder.getGenericReplacedValue(),
+					placeholder.getCustomReplacerValue());
+			customBody = customBody.replace(placeholder.getGenericReplacedValue(), placeholder.getCustomReplacerValue());
 		}
 
 		Email email = EmailBuilder.startingBlank() //
-				.to(null, recipientEmailAddress) //
-				.from(senderEmailAddress) //
-				.withSubject(localTitle) //
-				.withHTMLText(localBody) //
+				.to(null, notifiedEmailAddress) //
+				.from(DISCORD_DM_NOTIFICATIONS, notifierEmailAddress) //
+				.withSubject(customTitle) //
+				.withHTMLText(customBody) //
 				.buildEmail(); //
 
 		mailer.sendMail(email);
 	}
 
+	private boolean oneOfTheseIsNull(Object... objects) {
+		for (Object object : objects)
+			if (object == null)
+				return true;
+
+		return false;
+	}
+
 	/**
 	 * Configures the mailer (SMTP, port, sender credentials)
 	 * 
-	 * @param smtp_domain        (e.g. 'smtp.gmail.com'...)
-	 * @param port               (e.g. 587, 465...)
-	 * @param senderEmailAddress (e.g. 'notifier.discord@your-domain.fr'...)
-	 * @param senderPassword     Password of the sender email account
+	 * @param smtp_domain                  (e.g. 'smtp.gmail.com',
+	 *                                     'smtp.your-domain.com'...)
+	 * @param port                         (e.g. 587, 465...)
+	 * @param senderEmailAddress           (e.g.
+	 *                                     'notifier.discord@your-domain.com'...)
+	 * @param senderPassword               Password of the sender email account
+	 * @param debugLoggingMailerConnection Determines if the connection with the
+	 *                                     Mailer will be shown in the console
+	 * 
 	 * @return the unique Notifier instance for chaining
 	 */
-	public Notifier configureSMTP(String smtp_domain, int port, String senderEmailAddress, String senderPassword) {
-		this.senderEmailAddress = senderEmailAddress;
+	public Notifier configureSMTP(String smtp_domain, int port, String senderEmailAddress, String senderPassword,
+			boolean debugLoggingMailerConnection) {
+		this.notifierEmailAddress = senderEmailAddress;
 
 		mailer = MailerBuilder //
 				.withSMTPServer(smtp_domain, port, senderEmailAddress, senderPassword) //
 				.withTransportStrategy(TransportStrategy.SMTP) //
-				.buildMailer(); //
+				.withDebugLogging(debugLoggingMailerConnection).buildMailer(); //
 
 		return instance;
 	}
@@ -121,8 +137,8 @@ public class Notifier {
 	 * @param recipientEmailAddress your address email who received notifications
 	 * @return the unique Notifier instance for chaining
 	 */
-	public Notifier setRecipient(String recipientEmailAddress) {
-		this.recipientEmailAddress = recipientEmailAddress;
+	public Notifier setNotifiedEmail(String recipientEmailAddress) {
+		this.notifiedEmailAddress = recipientEmailAddress;
 
 		return instance;
 	}
