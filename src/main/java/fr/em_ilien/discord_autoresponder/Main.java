@@ -24,13 +24,13 @@ public class Main {
 	 * - The code will copy your token on your clipboard.
 	 * - Finally, paste the token below:
 	 */
-	private static final String TOKEN = "Mjk5MTIxODQyMDY3NjAzNDU2.GzE0wg.tIw2afjHdE9xWg_EQbxEXfsJbXF6ivRssqatuA"; //TODO: Please set here your discord account token (read the Javadoc above)
+	private static final String TOKEN = ""; //TODO: Please set here your discord account token (read the Javadoc above)
 
 //	---
 
 	/////////////////////// AUTORESPONSER PARAMETERS ///////////////////////
-	private static final boolean AUTORESPONDER_ENABLED = false;
-	private static final String AUTORESPONDER_TIMEZONE_STRING = "Europe/Paris";
+	private static final boolean AUTORESPONDER_ENABLED = true;
+	private static final String AUTORESPONDER_TIMEZONE_STRING = "";
 	private static final boolean AUTORESPONDER_ENABLE_PRINTING = true;
 	private static final int DELAY_IN_SECONDS_BEFORE_SENDING_AUTO_RESPONSE = 2;
 	private static final int DELAY_IN_SECONDS_BETWEEN_TWO_AUTO_RESPONSES = 60 * 60 * 10;
@@ -48,9 +48,9 @@ public class Main {
 
 	/////////////////////// NOTIFIER PARAMETERS ///////////////////////
 	private static final boolean NOTIFIER_ENABLED = true;
-	private static final String NOTIFIED_EMAIL_ADDRESS = "emiliencoss@gmail.com"; //TODO: please set here your email address which will receive notifications
-	private static final String NOTIFIER_EMAIL_ADDRESS = "notifications@em-ilien.fr"; //TODO: please set here the email address which will send notifications
-	private static final String NOTIFIER_PASSWORD = "mZ7hjPFtOwaKgggqrgnGuyO"; //TODO: please set here the password of notifier email account
+	private static final String NOTIFIED_EMAIL_ADDRESS = ""; //TODO: please set here your email address which will receive notifications
+	private static final String NOTIFIER_EMAIL_ADDRESS = ""; //TODO: please set here the email address which will send notifications
+	private static final String NOTIFIER_PASSWORD = ""; //TODO: please set here the password of notifier email account
 	private static final int NOTIFIER_PORT = 587;
 	private static final String NOTIFIER_SMTP_SERVER_DOMAIN = "ssl0.ovh.net";
 	private static final boolean NOTIFIER_DEBUG_LOGGING_MAILER_CONNECTION = false;
