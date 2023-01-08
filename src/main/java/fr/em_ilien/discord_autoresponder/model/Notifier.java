@@ -6,12 +6,13 @@ import org.simplejavamail.api.mailer.config.TransportStrategy;
 import org.simplejavamail.email.EmailBuilder;
 import org.simplejavamail.mailer.MailerBuilder;
 
+import fr.em_ilien.discord_autoresponder.exceptions.NotifierIsDisbaledException;
 import fr.em_ilien.discord_autoresponder.exceptions.NotifierParameterWasNotDefinedException;
 
 /**
  * Represents the emails notifier which send you email when users send you DMs.
  * 
- * To instanciate: <code>Notifier notifier = Notifier.getInstance();</code>
+ * To instantiate: <code>Notifier notifier = Notifier.getInstance();</code>
  * 
  * You have to specify the title and the body of the notifier by using methods
  * {@link Notifier#setTitle(String)} and {@link Notifier#setBody(String)}.
@@ -26,9 +27,12 @@ import fr.em_ilien.discord_autoresponder.exceptions.NotifierParameterWasNotDefin
  *
  */
 public class Notifier {
+	private static final boolean NOTIFIER_ENABLED = true;
+
 	private static final String DISCORD_DM_NOTIFICATIONS = "Discord DM notifications";
 
 	private static Notifier instance;
+	private boolean enabled;
 
 	private Mailer mailer;
 
@@ -46,6 +50,8 @@ public class Notifier {
 
 		title = null;
 		body = null;
+
+		enabled = NOTIFIER_ENABLED;
 	}
 
 	/**
@@ -71,8 +77,13 @@ public class Notifier {
 	 *                                                 or
 	 *                                                 {@link Notifier#setBody(String)}
 	 *                                                 was not used.
+	 * @throws NotifierIsDisbaledException             if the notifier is disabled
 	 */
-	public void sendWith(Placeholder... placeholders) throws NotifierParameterWasNotDefinedException {
+	public void sendWith(Placeholder... placeholders)
+			throws NotifierParameterWasNotDefinedException, NotifierIsDisbaledException {
+		if (!enabled)
+			throw new NotifierIsDisbaledException();
+
 		if (oneOfTheseIsNull(title, body, notifierEmailAddress, notifiedEmailAddress, mailer))
 			throw new NotifierParameterWasNotDefinedException();
 
@@ -84,7 +95,8 @@ public class Notifier {
 
 			customTitle = customTitle.replace(placeholder.getGenericReplacedValue(),
 					placeholder.getCustomReplacerValue());
-			customBody = customBody.replace(placeholder.getGenericReplacedValue(), placeholder.getCustomReplacerValue());
+			customBody = customBody.replace(placeholder.getGenericReplacedValue(),
+					placeholder.getCustomReplacerValue());
 		}
 
 		Email email = EmailBuilder.startingBlank() //
@@ -169,5 +181,21 @@ public class Notifier {
 		this.body = body;
 
 		return instance;
+	}
+
+	/**
+	 * Enabled or disable Autoresponder
+	 * 
+	 * @param enabled (boolean) Does the program has to reply to DMs?
+	 */
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	/**
+	 * @return true if the Autoresponder is enabled, false otherwise
+	 */
+	public boolean isEnabled() {
+		return enabled;
 	}
 }

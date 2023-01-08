@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
+import fr.em_ilien.discord_autoresponder.exceptions.AutoresponderIsDisabledException;
 import fr.em_ilien.discord_autoresponder.exceptions.AutoresponderMessageWasNotDefinedException;
 import fr.em_ilien.discord_autoresponder.exceptions.UserHasAlreadyBeenRepliedRecentlyException;
 import net.dv8tion.jda.api.entities.MessageChannel;
@@ -30,11 +31,14 @@ import net.dv8tion.jda.api.entities.User;
  *
  */
 public class Autoresponder {
+	private static final boolean AUTORESPONDER_ENABLED = true;
+
 	private static final int DEFAULT_DELAY_BETWEEN_TWO_AUTO_RESPONSES = 24 * 60 * 60;
 	private static final int DEFAULT_DELAY = 0;
 	private static final boolean DEFAULT_DEBUG_MOD_IS_ACTIVE = false;
 
 	private static Autoresponder instance;
+	private boolean enabled;
 
 	private Map<String, Date> usersWhoReceivedAResponse;
 
@@ -52,6 +56,7 @@ public class Autoresponder {
 		minimumDelayBetweenTwoAutoResponses = DEFAULT_DELAY_BETWEEN_TWO_AUTO_RESPONSES;
 		timezone = null;
 		printInConsoleWhenUsersReceiveAResponse = DEFAULT_DEBUG_MOD_IS_ACTIVE;
+		enabled = AUTORESPONDER_ENABLED;
 	}
 
 	/**
@@ -111,6 +116,8 @@ public class Autoresponder {
 	 * @throws UserHasAlreadyBeenRepliedRecentlyException if user has already
 	 *                                                    received the message from
 	 *                                                    autoresponder recently
+	 * @throws AutoresponderIsDisabledException                     if autoresponder is
+	 *                                                    disabled
 	 * 
 	 * @see Autoresponder#replyIfUserHasntAlreadyReceivedAResponseRecently(User,
 	 *      PrivateChannel)
@@ -118,8 +125,12 @@ public class Autoresponder {
 	 * @see Autoresponder#isUserHasAlreadyReceivedAResponseRecently(String)
 	 * @see Autoresponder#setMinimumDelayBetweenTwoAutoResponses(int)
 	 */
-	public void reply(User user, MessageChannel channel)
-			throws AutoresponderMessageWasNotDefinedException, UserHasAlreadyBeenRepliedRecentlyException {
+	public void reply(User user, MessageChannel channel) throws AutoresponderMessageWasNotDefinedException,
+			UserHasAlreadyBeenRepliedRecentlyException, AutoresponderIsDisabledException {
+
+		if (!enabled) {
+			throw new AutoresponderIsDisabledException();
+		}
 
 		if (message == null)
 			throw new AutoresponderMessageWasNotDefinedException();
@@ -150,9 +161,11 @@ public class Autoresponder {
 	 *                the user
 	 * @throws AutoresponderMessageWasNotDefinedException if message attribute
 	 *                                                    wasn't defined
+	 * @throws AutoresponderIsDisabledException                     if autoresponder is
+	 *                                                    disabled
 	 */
 	public void replyIfUserHasntAlreadyReceivedAResponseRecently(User author, PrivateChannel channel)
-			throws AutoresponderMessageWasNotDefinedException {
+			throws AutoresponderMessageWasNotDefinedException, AutoresponderIsDisabledException {
 		if (isUserHasAlreadyReceivedAResponseRecently(author.getId()))
 			return;
 
@@ -232,6 +245,22 @@ public class Autoresponder {
 		printInConsoleWhenUsersReceiveAResponse = enablePrinting;
 
 		return instance;
+	}
+
+	/**
+	 * Enabled or disable autoresponder
+	 * 
+	 * @param enabled (boolean) Does the program has to reply to DMs?
+	 */
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+	
+	/**
+	 * @return true if the autoresponder is enabled, false otherwise
+	 */
+	public boolean isEnabled() {
+		return enabled;
 	}
 
 }

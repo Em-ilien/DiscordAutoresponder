@@ -1,7 +1,9 @@
 package fr.em_ilien.discord_autoresponder.events;
 
 import fr.em_ilien.discord_autoresponder.Main;
+import fr.em_ilien.discord_autoresponder.exceptions.AutoresponderIsDisabledException;
 import fr.em_ilien.discord_autoresponder.exceptions.AutoresponderMessageWasNotDefinedException;
+import fr.em_ilien.discord_autoresponder.exceptions.NotifierIsDisbaledException;
 import fr.em_ilien.discord_autoresponder.exceptions.NotifierParameterWasNotDefinedException;
 import fr.em_ilien.discord_autoresponder.model.Autoresponder;
 import fr.em_ilien.discord_autoresponder.model.Notifier;
@@ -15,21 +17,31 @@ public class DMReceivedEventListener extends ListenerAdapter {
 	public void onPrivateMessageReceived(PrivateMessageReceivedEvent event) {
 		if (event.getAuthor().equals(Main.jda.getSelfUser()))
 			return;
-		
+
+		Notifier notifier = Notifier.getInstance();
+		Autoresponder autoresponder = Autoresponder.getInstance();
+
 		try {
-			Notifier notifier = Notifier.getInstance();
-			Autoresponder autoresponder = Autoresponder.getInstance();
+			if (notifier.isEnabled())
+				notifier.sendWith( //
+						new Placeholder("{%DM_AUTHOR_USERNAME%}", event.getAuthor().getAsTag()), //
+						new Placeholder("{%DM_CONTENT%}", event.getMessage().getContentRaw().replace("\n", "<br>")), //
+						new Placeholder("{%DM_AUTHOR_ID%}", event.getChannel().getId()) //
+				);
 
-			notifier.sendWith( //
-					new Placeholder("{%DM_AUTHOR_USERNAME%}", event.getAuthor().getAsTag()), //
-					new Placeholder("{%DM_CONTENT%}", event.getMessage().getContentRaw().replace("\n", "<br>")), //
-					new Placeholder("{%DM_AUTHOR_ID%}", event.getChannel().getId()) //
-			);
-
-			autoresponder.replyIfUserHasntAlreadyReceivedAResponseRecently(event.getAuthor(), event.getChannel());
-		} catch (NotifierParameterWasNotDefinedException e1) {
-			e1.printStackTrace();
+			if (autoresponder.isEnabled())
+				autoresponder.replyIfUserHasntAlreadyReceivedAResponseRecently(event.getAuthor(), event.getChannel());
 		} catch (AutoresponderMessageWasNotDefinedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NotifierParameterWasNotDefinedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NotifierIsDisbaledException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (AutoresponderIsDisabledException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
